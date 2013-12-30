@@ -23,6 +23,9 @@ class Repo
     @tree_dirty = $?.to_i != 0
     `git diff-index --cached HEAD --quiet 2> /dev/null`
     @index_dirty = $?.to_i != 0
+
+    `git status 2> /dev/null`
+    @broken = $?.to_i != 0
   end
 
   def has_origin?
@@ -39,6 +42,10 @@ class Repo
 
   def dirty?
     @tree_dirty or @index_dirty
+  end
+
+  def broken?
+    @broken
   end
 
   def path
@@ -79,6 +86,14 @@ repos_without_master = repos.select { |r| not r.has_master? }
 unless repos_without_master.empty? then
   puts "\nRepos without a master branch:"
   repos_without_master.each do |r|
+    puts "    #{r.path}"
+  end
+end
+
+repos_broken = repos.select { |r| r.broken? }
+unless repos_broken.empty? then
+  puts "\nRepos that are just broken (git status doesn't work):"
+  repos_broken.each do |r|
     puts "    #{r.path}"
   end
 end
