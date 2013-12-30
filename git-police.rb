@@ -19,9 +19,10 @@ class Repo
     @commit_master = get_commit_hash "master"
     @commit_origin_master = get_commit_hash "origin/master"
 
-    # puts "commit_head: #{commit_head}"
-    # puts "commit_master: #{commit_master}"
-    # puts "commit_origin_master: #{commit_origin_master}"
+    `git diff-files --quiet 2> /dev/null`
+    @tree_dirty = $?.to_i != 0
+    `git diff-index --cached HEAD --quiet 2> /dev/null`
+    @index_dirty = $?.to_i != 0
   end
 
   def has_origin?
@@ -34,6 +35,10 @@ class Repo
 
   def latest_pushed?
     @commit_master == @commit_origin_master and has_master?
+  end
+
+  def dirty?
+    @tree_dirty or @index_dirty
   end
 
   def path
@@ -58,6 +63,14 @@ repos_out_of_sync = repos.select { |r| r.has_origin? and not r.latest_pushed? }
 unless repos_out_of_sync.empty? then
   puts "\nRepos out of sync with their origins:"
   repos_out_of_sync.each do |r|
+    puts "    #{r.path}"
+  end
+end
+
+repos_dirty = repos.select { |r| r.dirty? }
+unless repos_dirty.empty? then
+  puts "\nRepos with uncommitted changes:"
+  repos_dirty.each do |r|
     puts "    #{r.path}"
   end
 end
