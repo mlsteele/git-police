@@ -56,7 +56,10 @@ end
 # -------
 
 repo_paths = (`find ~ -name .git`).split("\n")
-repos = repo_paths.map { |path| Repo.new path }
+repos = repo_paths.map do |path|
+  print "."
+  Repo.new path
+end
 
 repos_without_origin = repos.select { |r| not r.has_origin? }
 unless repos_without_origin.empty? then
