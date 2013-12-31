@@ -61,42 +61,18 @@ repos = repo_paths.map do |path|
   Repo.new path
 end
 
-repos_without_origin = repos.select { |r| not r.has_origin? }
-unless repos_without_origin.empty? then
-  puts "\nRepos without an origin:"
-  repos_without_origin.each do |r|
-    puts "    #{r.path}"
+def list_repo_category(text, repos, filter)
+  repos_selected = repos.select &filter
+  unless repos_selected.empty? then
+    puts "\n#{text}"
+    repos_selected.each do |r|
+      puts "    #{r.path}"
+    end
   end
 end
 
-repos_out_of_sync = repos.select { |r| r.has_origin? and not r.latest_pushed? }
-unless repos_out_of_sync.empty? then
-  puts "\nRepos out of sync with their origins:"
-  repos_out_of_sync.each do |r|
-    puts "    #{r.path}"
-  end
-end
-
-repos_dirty = repos.select { |r| r.dirty? }
-unless repos_dirty.empty? then
-  puts "\nRepos with uncommitted changes:"
-  repos_dirty.each do |r|
-    puts "    #{r.path}"
-  end
-end
-
-repos_without_master = repos.select { |r| not r.has_master? }
-unless repos_without_master.empty? then
-  puts "\nRepos without a master branch:"
-  repos_without_master.each do |r|
-    puts "    #{r.path}"
-  end
-end
-
-repos_broken = repos.select { |r| r.broken? }
-unless repos_broken.empty? then
-  puts "\nRepos that are just broken (git status doesn't work):"
-  repos_broken.each do |r|
-    puts "    #{r.path}"
-  end
-end
+list_repo_category "Repos without an origin:",                              repos, Proc.new { |r| not r.has_origin? }
+list_repo_category "Repos with uncommitted changes:",                       repos, Proc.new { |r| r.dirty? }
+list_repo_category "Repos out of sync with their origins:",                 repos, Proc.new { |r| r.has_origin? and not r.latest_pushed? }
+list_repo_category "Repos without a master branch:",                        repos, Proc.new { |r| not r.has_master? }
+list_repo_category "Repos that are just broken (git status doesn't work):", repos, Proc.new { |r| r.broken? }
