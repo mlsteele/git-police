@@ -55,7 +55,7 @@ end
 
 # -------
 
-repo_paths = (`find ~ -name .git`).split("\n")
+repo_paths = (`find ~ -name .git -type d`).split("\n")
 repos = repo_paths.map do |path|
   print "."
   Repo.new path
