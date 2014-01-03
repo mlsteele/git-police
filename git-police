@@ -53,12 +53,12 @@ class Repo
   end
 end
 
-# -------
-
-repo_paths = (`find ~ -name .git -type d`).split("\n")
-repos = repo_paths.map do |path|
-  print "."
-  Repo.new path
+def scan_dir(dir_path)
+  repo_paths = (`find "#{dir_path}" -name .git -type d`).split("\n")
+  repo_paths.map do |path|
+    print "."
+    Repo.new path
+  end
 end
 
 def list_repo_category(text, repos, filter)
@@ -71,8 +71,19 @@ def list_repo_category(text, repos, filter)
   end
 end
 
-list_repo_category "Repos without an origin:",                              repos, Proc.new { |r| not r.has_origin? }
-list_repo_category "Repos with uncommitted changes:",                       repos, Proc.new { |r| r.dirty? }
-list_repo_category "Repos out of sync with their origins:",                 repos, Proc.new { |r| r.has_origin? and not r.latest_pushed? }
-list_repo_category "Repos without a master branch:",                        repos, Proc.new { |r| not r.has_master? }
-list_repo_category "Repos that are just broken (git status doesn't work):", repos, Proc.new { |r| r.broken? }
+def report_dir(dir_path)
+  repos = scan_dir dir_path
+  list_repo_category "Repos without an origin:",                              repos, Proc.new { |r| not r.has_origin? }
+  list_repo_category "Repos with uncommitted changes:",                       repos, Proc.new { |r| r.dirty? }
+  list_repo_category "Repos out of sync with their origins:",                 repos, Proc.new { |r| r.has_origin? and not r.latest_pushed? }
+  list_repo_category "Repos without a master branch:",                        repos, Proc.new { |r| not r.has_master? }
+  list_repo_category "Repos that are just broken (git status doesn't work):", repos, Proc.new { |r| r.broken? }
+end
+
+# -----
+
+if ARGV[0]
+  report_dir(ARGV[0])
+else
+  report_dir("`pwd`")
+end
